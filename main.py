@@ -5,10 +5,11 @@ import markdown
 from inlinestyler.utils import inline_css
 import datetime, time
 from random import randint
+from config.mail_account import destination
 
 # CHN ENG
 lang = 'CHN'
-user = { 'mail': '775150558@qq.com' }
+user = { 'mail': destination }
 logfile = 'auto_score.log'
 wait_time = 300
 wait_time_random_range = 100

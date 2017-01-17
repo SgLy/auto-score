@@ -11,16 +11,21 @@ Currently only for linux.
 
 ### Requires:
 - [`Google Chromium`](https://www.chromium.org/Home) or other browser that supports [`SeleniumHQ`](http://www.seleniumhq.org/)
+
 > if you use a browser besides chromium, please change `auto_score.py:6` to corresponding browser, such as `driver = webdriver.FireFox()`. For all supported browsers, please read document of Selenium.
 
 ### Usage:
-1. create `mail_account.py` under `config` folder, containing your account to send email;
+1. create `mail_account.py` under `config` folder, containing your account to send and receive email;
 2. compile result-generating module, like `g++ generate.cpp -o generate`;
+
 > `virtualenv` is recommended
+
 3. `virtualenv -p /usr/bin/python3 env`;
 4. `env/bin/pip install -r requirements.txt`;
 5. `./main.py`.
+
 > without `virtualenv`
+
 3. `pip install -r requirements.txt`;
 4. `python3 main.py`.
 
@@ -29,6 +34,7 @@ Currently only for linux.
 # filename: mail_account.py
 
 source = 'me@mail.163.com'
+destination = 'mail@to.receive.notification'
 passwd = 'myMAILaccountPASSWORD'
 smtp_server = 'smtp.163.com'
 ```
