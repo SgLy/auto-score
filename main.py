@@ -1,14 +1,23 @@
 #!env/bin/python
-import auto_score
-import mail
+import auto_score, mail
 import os
 import markdown
-import pynliner
-
-from config.id_list import id_list
+from inlinestyler.utils import inline_css
+import datetime, time
+from random import randint
 
 # CHN ENG
-lang = 'ENG'
+lang = 'CHN'
+user = { 'mail': '775150558@qq.com' }
+logfile = 'auto_score.log'
+wait_time = 300
+wait_time_random_range = 100
+
+def writeLog(s):
+    with open(logfile, 'a') as f:
+        f.write('[%s] ' % datetime.datetime.today().isoformat())
+        f.write(s + '\n')
+    print(s)
 
 def getContent(filename):
     with open(filename,'r') as f:
@@ -20,28 +29,40 @@ def writeContent(filename, content):
     f.write(content)
     f.close()
 
-for user in id_list:
-    folder = 'userdata/%s' % user['id']
-    new_file = '%s/new' % folder
-    old_file = '%s/old' % folder
-    out_file = '%s/out' % folder
-    if not os.path.exists(folder):
-        os.system('mkdir %s' % folder)
-    if not os.path.isfile(old_file):
-        writeContent(old_file, '0\n')
-    grade = auto_score.getGrade(user['id'], user['passwd'])
-    auto_score.printRaw(grade, new_file)
-    os.system('./generate %s %s %s -%s -MARKDOWN' % (old_file, new_file, out_file, lang))
+folder = 'userdata'
+new_file = '%s/new' % folder
+old_file = '%s/old' % folder
+out_file = '%s/out' % folder
+if not os.path.exists(folder):
+    os.system('mkdir %s' % folder)
+if not os.path.isfile(old_file):
+    writeContent(old_file, '0\n')
+
+writeLog('Start browser and login')
+driver = auto_score.login()
+while True:
+    writeLog('Query grade')
+    grade = auto_score.getScore(driver)
+    auto_score.toFile(grade, new_file)
+
+    writeLog('Compare old and new grades')
+    os.system('./generate %s %s %s -%s -MARKDOWN >> %s' % (old_file, new_file, out_file, lang, logfile))
     content = getContent(out_file)
 
     if len(content) != 0:
-        tra = markdown.markdown(content, extensions=['markdown.extensions.tables'])
-        tra = getContent('template/head.html') + tra + getContent('template/tail.html')
-        tra = pynliner.Pynliner().from_string(tra).run()
-        writeContent('tmp.html', tra)
+        writeLog('Compile markdown')
+        content = markdown.markdown(content, extensions=['markdown.extensions.tables'])
+        writeLog('Inline CSS')
+        content = getContent('template/head.html') + content + getContent('template/tail.html')
+        content = inline_css(content)
 
-        tile = getContent('config/title_%s.txt' % lang)
-        mail.sendMail(title, 'tmp.html', user['mail'], True)
-        os.system('rm tmp.html')
+        writeLog('Send mail to %s' % user['mail'])
+        title = '成绩有变动' if lang == 'CHN' else 'Grade updated'
+        mail.sendMail(title, content, user['mail'], True)
+    writeLog('Override old grade')
     os.system('rm %s' % out_file)
     os.system('mv %s %s' % (new_file, old_file))
+
+    t = wait_time + randint(-wait_time_random_range, wait_time_random_range)
+    writeLog('Wait %d seconds for next query' % t)
+    time.sleep(t)

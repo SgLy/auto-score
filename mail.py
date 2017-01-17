@@ -1,25 +1,18 @@
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from config.mail_account import me, passwd, smtp_server
+from config.mail_account import source, passwd, smtp_server
 
-def sendMail(title, filename, des, isHtml):
-    you = des
-    
+def sendMail(title, content, destination, isHtml):
     msg = MIMEMultipart('alternative')
-
-    with open(filename, 'rb') as fb:
-        if isHtml:
-            msg.attach(MIMEText(fp.read(), 'html'))
-        else:
-            msg.attach(MIMEText(fp.read(), 'plain'))
+    msg.attach(MIMEText(content, 'html' if isHtml else 'plain'))
 
     msg['Subject'] = title
-    msg['From'] = me
-    msg['To'] = you
+    msg['From'] = source
+    msg['To'] = destination
 
     s = smtplib.SMTP(smtp_server)
     s.starttls()
-    s.login(me, passwd)
-    s.sendmail(me, [you], msg.as_string())
+    s.login(source, passwd)
+    s.sendmail(source, [destination], msg.as_string())
     s.quit()

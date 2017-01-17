@@ -1,0 +1,6 @@
+cssutils==1.0.1
+inlinestyler==0.2.3
+lxml==3.7.2
+Markdown==2.6.7
+requests==2.12.4
+selenium==3.0.2

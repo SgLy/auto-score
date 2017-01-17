@@ -1,8 +1,8 @@
 # Project specific file
 config/mail_account.py
-config/id_list.py
-captcha.jpg
+auto_score.log
 generate
+userdata/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

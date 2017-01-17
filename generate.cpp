@@ -12,7 +12,7 @@
 
 const int LANG_ENG = 0, LANG_CHN = 1;
 const bool MARKDOWN = true, RAW = false;
-const int MAXD = 19, MAX_BUFF_LEN = 1024;
+const int MAXD = 20, MAX_BUFF_LEN = 1024;
 
 std::vector<std::string> category, category_nam;
 std::vector<bool> appeared_new, appeared_old;
@@ -46,6 +46,10 @@ public:
         std::string res = category_nam[i] + ": " + data[i] + "\n";
         return res;
     }
+    std::string operator[] (const std::string &index)
+    {
+        return data[low[index]];
+    }
     std::vector<std::string> data;
 };
 
@@ -74,6 +78,7 @@ bool operator!=(const record& a, const record& b)
     return !(a == b);
 }
 
+
 std::string line()
 {
     std::string a;
@@ -93,21 +98,12 @@ void wrong_arg()
     exit(1);
 }
 
-void writeDateTime()
-{
-    char buffer[1024];
-    time_t t = time(0);
-    struct tm* timeinfo = localtime(&t);
-    strftime(buffer, 1024, "[%Y-%m-%d %H:%M:%S]", timeinfo);
-    puts(buffer);
-}
-
 double get_gpa(const std::vector<record>& a)
 {
     double credit = 0, gp = 0;
     for (auto rec : a) {
-        credit += stof(rec.data[low["xf"]], 0);
-        gp += stof(rec.data[low["jd"]], 0) * stof(rec.data[low["xf"]], 0);
+        credit += stof(rec["xf"], 0);
+        gp += stof(rec["jd"], 0) * stof(rec["xf"], 0);
     }
     if (credit == 0)
         return 0;
@@ -136,13 +132,13 @@ void checkArgument(int argc, char const* argv[])
 
 void getCategoryName()
 {
-    std::ifstream category_in("data/category.txt");
+    std::ifstream category_in("config/category.txt");
     while (category_in.getline(buff, MAX_BUFF_LEN)) {
         category.push_back(buff);
         low[category.back()] = category.size() - 1;
     }
 
-    std::ifstream category_nam_in((language == LANG_CHN) ? "data/category_name_chn.txt" : "data/category_name_eng.txt");
+    std::ifstream category_nam_in((language == LANG_CHN) ? "config/category_name_chn.txt" : "config/category_name_eng.txt");
     while (category_nam_in.getline(buff, MAX_BUFF_LEN))
         category_nam.push_back(buff);
 }
@@ -198,10 +194,10 @@ void compareData()
         for (size_t j = 0; j < item_new.size(); ++j) {
             if (appeared_new[j])
                 continue;
-            if (item_old[i].data[low["kch"]] == item_new[j].data[low["kch"]]) {
+            if (item_old[i]["kch"] == item_new[j]["kch"]) {
                 appeared_old[i] = true;
                 appeared_new[j] = true;
-                if (item_old[i] != item_new[j])
+                if (item_old[i]["zzcj"] != item_new[j]["zzcj"])
                     changed.push_back(std::make_pair(i, j));
             }
         }
@@ -217,7 +213,6 @@ void compareData()
 
 void writeLog(int argc, char const* argv[])
 {
-    writeDateTime();
     printf("Comparing \"%s\" and \"%s\"\n", argv[1], argv[2]);
     printf("Output to \"%s\"\n", argv[3]);
     if (argc == 4)
@@ -231,7 +226,7 @@ void writeLog(int argc, char const* argv[])
     printf("CHANGE\n");
     for (auto a : changed) {
         printf("    Old #%d -> New #%d, kch: ", a.first, a.second);
-        std::string s = item_old[a.first].data[low["kch"]];
+        std::string s = item_old[a.first]["kch"];
         for (size_t i = 0; i < s.length(); ++i)
             printf("%c", s[i]);
         printf("\n");
@@ -242,7 +237,7 @@ void writeLog(int argc, char const* argv[])
     printf("NEW\n");
     for (auto a : newed) {
         printf("  New #%d, kch: ", a);
-        std::string s = item_new[a].data[low["kch"]];
+        std::string s = item_new[a]["kch"];
         for (size_t i = 0; i < s.length(); ++i)
             printf("%c", s[i]);
         printf("\n");
@@ -253,7 +248,7 @@ void writeLog(int argc, char const* argv[])
     printf("REMOVE\n");
     for (auto a : removed) {
         printf("  Old #%d, kch: ", a);
-        std::string s = item_old[a].data[low["kch"]];
+        std::string s = item_old[a]["kch"];
         for (size_t i = 0; i < s.length(); ++i)
             printf("%c", s[i]);
         printf("\n");
@@ -346,12 +341,13 @@ void writeMarkdown(const char* filename)
 
     std::vector<int> category_to_print;
     category_to_print.push_back(low["kcmc"]);
+    category_to_print.push_back(low["jsxm"]);
     category_to_print.push_back(low["xf"]);
     category_to_print.push_back(low["zzcj"]);
     category_to_print.push_back(low["jd"]);
 
     if (language == LANG_CHN) {
-        output << "你的成绩有" << total << "处变动。\n";
+        output << "你的成绩有" << total << "处变动，";
         output << "均绩由" << get_gpa(item_old) << "变为" << get_gpa(item_new) << "。\n\n";
     }
     else {
@@ -402,16 +398,17 @@ void writeMarkdown(const char* filename)
         // output << changed.size() << " grade were changed:\n\n";
         for (size_t i = 0; i < changed.size(); ++i) {
             auto a = item_old[changed[i].first];
+            auto b = item_new[changed[i].second];
             if (language == LANG_CHN)
                 output << "| 成绩变动 #" << i + 1 << " ";
             else
                 output << "| Changed grade #" << i + 1 << " ";
-            for (auto b : category_to_print)
-                if (item_old[i].data[b] == item_new[i].data[b])
-                    output << "| " << item_old[i].data[b] << " ";
+            for (auto c : category_to_print)
+                if (a.data[c] == b.data[c])
+                    output << "| " << a.data[c] << " ";
                 else {
-                    output << "| " << item_old[i].data[b] << " -> ";
-                    output << item_new[i].data[b] << " ";
+                    output << "| " << a.data[c] << " -> ";
+                    output << b.data[c] << " ";
                 }
             output << "|\n";
         }
