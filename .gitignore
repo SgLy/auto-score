@@ -1,7 +1,9 @@
 # Project specific file
 config/mail_account.py
+config/info.py
 auto_score.log
 generate
+generate.exe
 userdata/
 
 # Byte-compiled / optimized / DLL files
