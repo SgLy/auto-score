@@ -1,60 +1,65 @@
-import requests
-import re, json
-from bs4 import BeautifulSoup
+#!env/bin/python
 from util import *
+from fetcher import fetcher
+import compare
+
+import threading
+import os, time, json, getpass
+from random import randint
 
 class auto_score:
-    def __init__(self, info):
+    def __init__(self, info, language = 'CHN'):
         self.info = info
-        self.session = None
+        self.WAIT_TIME = 300
+        self.WAIT_TIME_RANDOM_RANGE = 100
+        self.fetcher = fetcher(self.info)
 
-    def getScore(self):
-        if self.session is None:
-            writeLog(self.info['netid'], 'No session existing. First time login')
-            self.session = self.__tryLogin__()
+        self.filename = os.path.join('userdata', self.info['netid'] + '.json')
+        if not os.path.isfile(self.filename):
+            with open(self.filename, 'w') as f:
+                json.dump([], f)
 
+    def start(self):
+        threading.Thread(target = self.__run__).start()
+
+    def __run__(self):
         while True:
-            r = self.session.get('http://wjw.sysu.edu.cn/api/score')
-            if r.content.decode('utf-8').find('expired') == -1:
-                break
-            # Session expired
-            writeLog(self.info['netid'], 'Session expired. Retry login...')
-            self.session = self.__tryLogin__()
+            writeLog(self.info['netid'], 'Query grade')
+            new_grade = self.fetcher.getScore()
+            with open(self.filename, 'r') as f:
+                old_grade = json.load(f)
 
-        res = r.content.decode('utf-8')
-        res = re.findall(r'primary:(\[.+?\])', res)[0].replace('\\/', '/')
-        return json.loads(res)
+            if new_grade == old_grade:
+                writeLog(self.info['netid'], 'No updates detected.')
+            else:
+                writeLog(self.info['netid'], 'Updates detected, compare old and new grades')
+                content = compare.compareGrade(old_grade, new_grade, language)
 
-    def __tryLogin__(self):
-        writeLog(self.info['netid'], 'Try login')
-        try:
-            s = self.__login__()
-        except RuntimeError as err:
-            print(err)
-            quit()
-        else:
-            writeLog(self.info['netid'], 'Successfully logged in.')
-            return s
+                writeLog(self.info['netid'], 'Send mail to %s' % self.info['mail'])
+                title = '成绩有变动' if LANG == 'CHN' else 'Grade updated'
+                sendMail(title, content, self.info['mail'], isHtml = False)
 
-    def __login__(self):
-        s = requests.session()
-        url = 'https://cas.sysu.edu.cn/cas/login?service=http://uems.sysu.edu.cn/jwxt/casLogin?_tocasurl=http://wjw.sysu.edu.cn/cas'
-        soup = BeautifulSoup(s.get(url).content, 'lxml')
-        data = {
-            'username': self.info['netid'],
-            'password': self.info['passwd'],
-            'lt': soup.select('[name=lt]')[0]['value'],
-            'execution': soup.select('[name=execution]')[0]['value'],
-            '_eventId': 'submit',
-            'submit': 'LOGIN'
-        }
-        r = s.post(url, data = data)
-        if r.status_code != requests.codes.ok:
-            raise RuntimeError('Network error! Status code: %d' % r.status_code)
-        if r.content.decode('utf-8', 'ignore').find('Invalid credentials.') != -1:
-            raise RuntimeError('Invalid credentials.')
-        url = re.findall(r'(http.+?)"', r.content.decode('utf-8'))[0]
-        r = s.get(url)
-        if r.status_code != requests.codes.ok:
-            raise RuntimeError('Network error! Status code: %d' % r.status_code)
-        return s
+                writeLog(self.info['netid'], 'Override old grade')
+                with open(self.filename, 'w') as f:
+                    json.dump(new_grade, f)
+
+            t = self.WAIT_TIME + randint(-self.WAIT_TIME_RANDOM_RANGE, self.WAIT_TIME_RANDOM_RANGE)
+            writeLog(self.info['netid'], 'Wait %d seconds for next query' % t)
+            time.sleep(t)
+
+if not os.path.exists('userdata'):
+    os.mkdir('userdata')
+
+if __name__ == '__main__':
+    a = []
+    while True:
+        print('Account #%d:' % len(a))
+        a.append(auto_score({
+            'netid': input('NetID: '),
+            'passwd': getpass.getpass(),
+            'mail': input('Email: ')
+        }))
+        if not input('Input one more account? (Yy)') in ['y', 'Y']:
+            break
+    for i in a:
+        i.start()
