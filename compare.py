@@ -110,11 +110,14 @@ def renderText(added, removed, modified, gpa, language):
                 detail += '%s:\n' % keys[k]
         detail += '\n'
 
-    for i, o, n in enumerate(modified):
+    for i, (o, n) in enumerate(modified):
         detail += '[%s #%d]\n' % (titles[2], i)
         for k in PRINTED_KEY:
             try:
-                detail += '%s: %s -> %s\n' % (keys[k], o[k], n[k])
+                if o[k] == n[k]:
+                    detail += '%s: %s\n' % (keys[k], o[k])
+                else:
+                    detail += '%s: %s -> %s\n' % (keys[k], o[k], n[k])
             except KeyError:
                 detail += '%s:\n' % keys[k]
         detail += '\n'
