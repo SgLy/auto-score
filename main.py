@@ -1,11 +1,11 @@
 #!env/bin/python
 from util import *
-import auto_score, compare, mail
+import auto_score, compare
 import os, time, json
 from random import randint
 
 # CHN ENG
-LANG = 'ENG'
+LANG = 'CHN'
 WAIT_TIME = 300
 WAIT_TIME_RANDOM_RANGE = 100
 
@@ -30,7 +30,7 @@ while True:
         content = compare.compareGrade(old_grade, new_grade, language = LANG)
         writeLog('Send mail to %s' % info['mail'])
         title = '成绩有变动' if LANG == 'CHN' else 'Grade updated'
-        mail.sendMail(title, content, info['mail'], isHtml = False)
+        sendMail(title, content, info['mail'], isHtml = False)
         writeLog('Override old grade')
         with open(filename, 'w') as f:
             json.dump(new_grade, f)
