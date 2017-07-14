@@ -10,6 +10,7 @@ from random import randint
 class auto_score:
     def __init__(self, info, language = 'CHN'):
         self.info = info
+        self.language = language
         self.WAIT_TIME = 300
         self.WAIT_TIME_RANDOM_RANGE = 100
         self.fetcher = fetcher(self.info)
@@ -33,10 +34,10 @@ class auto_score:
                 writeLog(self.info['netid'], 'No updates detected.')
             else:
                 writeLog(self.info['netid'], 'Updates detected, compare old and new grades')
-                content = compare.compareGrade(old_grade, new_grade, language)
+                content = compare.compareGrade(old_grade, new_grade, self.language)
 
                 writeLog(self.info['netid'], 'Send mail to %s' % self.info['mail'])
-                title = '成绩有变动' if LANG == 'CHN' else 'Grade updated'
+                title = '成绩有变动' if self.language == 'CHN' else 'Grade updated'
                 sendMail(title, content, self.info['mail'], isHtml = False)
 
                 writeLog(self.info['netid'], 'Override old grade')

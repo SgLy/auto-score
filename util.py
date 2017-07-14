@@ -21,8 +21,8 @@ def sendMail(title, content, destination, isHtml):
     msg['From'] = sender
     msg['To'] = destination
 
-    s = smtplib.SMTP(smtp_server)
-    s.starttls()
-    s.login(sender, passwd)
-    s.sendmail(sender, [destination], msg.as_string())
-    s.quit()
+    with smtplib.SMTP(smtp_server) as smtp:
+        smtp.starttls()
+        smtp.login(sender, passwd)
+        smtp.sendmail(sender, [destination], msg.as_string())
+        smtp.quit()
