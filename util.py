@@ -1,11 +1,11 @@
 import sys, datetime
 
 LOGFILE = 'auto_score.log'
-def writeLog(s):
+def writeLog(netid, content):
     with open(LOGFILE, 'a') as f:
-        f.write('[%s] ' % datetime.datetime.today().isoformat())
-        f.write(s + '\n')
-    print(s)
+        time = datetime.datetime.today().isoformat()
+        f.write('[%s] (%s) %s\n' % (time, netid, content))
+    print('(%s) %s' % (netid, content))
 
 # mail
 import smtplib

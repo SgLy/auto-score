@@ -15,7 +15,6 @@ def calcGPA(grade):
         return 0.0
 
 def compareGrade(old_grade, new_grade, language = 'ENG'):
-    writeLog('Compare old and new grades')
     # Rebuild
     new = dict([(u[KEY], u) for u in new_grade])
     old = dict([(u[KEY], u) for u in old_grade])
@@ -87,7 +86,7 @@ def renderText(added, removed, modified, gpa, language):
         titles = TITLES_CHN
         keys = KEYS_CHN
     else:
-        writeLog('Language error: %s translation not found' % language)
+        raise RuntimeError('Language error: %s translation not found' % language)
         quit()
 
     detail = u''

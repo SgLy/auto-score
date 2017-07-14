@@ -10,7 +10,7 @@ class auto_score:
 
     def getScore(self):
         if self.session is None:
-            writeLog('No session existing. First time login')
+            writeLog(self.info['netid'], 'No session existing. First time login')
             self.session = self.__tryLogin__()
 
         while True:
@@ -18,7 +18,7 @@ class auto_score:
             if r.content.decode('utf-8').find('expired') == -1:
                 break
             # Session expired
-            print('Session expired. Retry login...')
+            writeLog(self.info['netid'], 'Session expired. Retry login...')
             self.session = self.__tryLogin__()
 
         res = r.content.decode('utf-8')
@@ -26,14 +26,14 @@ class auto_score:
         return json.loads(res)
 
     def __tryLogin__(self):
-        writeLog('Try logging in %s' % self.info['netid'])
+        writeLog(self.info['netid'], 'Try login')
         try:
             s = self.__login__()
         except RuntimeError as err:
             print(err)
             quit()
         else:
-            print('Successfully logged in.')
+            writeLog(self.info['netid'], 'Successfully logged in.')
             return s
 
     def __login__(self):
