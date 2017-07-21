@@ -14,6 +14,7 @@ class auto_score:
         self.WAIT_TIME = 300
         self.WAIT_TIME_RANDOM_RANGE = 100
         self.fetcher = fetcher(self.info)
+        self.thread = None
 
         self.filename = os.path.join('userdata', self.info['netid'] + '.json')
         if not os.path.isfile(self.filename):
@@ -21,7 +22,11 @@ class auto_score:
                 json.dump([], f)
 
     def start(self):
-        threading.Thread(target = self.__run__).start()
+        self.thread = threading.Thread(target = self.__run__, daemon = True)
+        self.thread.start()
+
+    def stop(self):
+        self.thread._stop()
 
     def __run__(self):
         while True:
@@ -52,15 +57,20 @@ if not os.path.exists('userdata'):
     os.mkdir('userdata')
 
 if __name__ == '__main__':
-    a = []
-    while True:
-        print('Account #%d:' % len(a))
-        a.append(auto_score({
-            'netid': input('NetID: '),
-            'passwd': getpass.getpass(),
-            'mail': input('Email: ')
-        }))
-        if not input('Input one more account? (Yy)') in ['y', 'Y']:
-            break
-    for i in a:
-        i.start()
+    try:
+        a = []
+        while True:
+            print('Account #%d:' % len(a))
+            a.append(auto_score({
+                'netid': input('NetID: '),
+                'passwd': getpass.getpass(),
+                'mail': input('Email: ')
+            }))
+            if not input('Input one more account? (Yy) ') in ['y', 'Y']:
+                break
+        for i in a:
+            i.start()
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print('Interrupted')
