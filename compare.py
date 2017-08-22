@@ -98,7 +98,7 @@ def renderText(added, removed, modified, gpa, language):
                 detail += '%s: %s\n' % (keys[k], a[k])
             except KeyError:
                 detail += '%s:\n' % keys[k]
-        detail += '\n'
+        detail += renderDetail(a) + '\n'
 
     for i, r in enumerate(removed):
         detail += '[%s #%d]\n' % (titles[1], i)
@@ -107,7 +107,7 @@ def renderText(added, removed, modified, gpa, language):
                 detail += '%s: %s\n' % (keys[k], r[k])
             except KeyError:
                 detail += '%s:\n' % keys[k]
-        detail += '\n'
+        detail += renderDetail(a) + '\n'
 
     for i, (o, n) in enumerate(modified):
         detail += '[%s #%d]\n' % (titles[2], i)
@@ -119,8 +119,21 @@ def renderText(added, removed, modified, gpa, language):
                     detail += '%s: %s -> %s\n' % (keys[k], o[k], n[k])
             except KeyError:
                 detail += '%s:\n' % keys[k]
-        detail += '\n'
+        for k in n:
+            if k in PRINTED_KEY:
+                continue
+            if o[k] != n[k]:
+                detail += '%s: %s -> %s\n' % (k, o[k], n[k])
+        detail += renderDetail(a) + '\n'
 
     total_len = len(added) + len(removed) + len(modified)
     
     return pattern % (total_len, gpa[0], gpa[1], detail)
+
+def renderDetail(grade):
+    s = u''
+    for d in grade['detail']:
+        print(d)
+        print(s)
+        s += '%s(%s * %s%%) + ' % (d['fxmc'], d['fxcj'], d['mrqz'])
+    return '%s = %s\n' % (s[:-3], grade['zzcj'])

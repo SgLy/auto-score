@@ -25,6 +25,16 @@ class fetcher:
         res = re.findall(r'primary:(\[.+?\])', res)[0].replace('\\/', '/')
         return json.loads(res)
 
+    def getDetail(self, rid):
+        url = 'http://wjw.sysu.edu.cn/api/score_detail?resource_id=' + rid
+        res = self.session.get(url).content.decode('utf-8')
+        try:
+            res = re.findall(r'primary:(\[.+?\])', res)[0].replace('\\/', '/')
+        except IndexError:
+            return []
+        else:
+            return json.loads(res)
+
     def __tryLogin__(self):
         writeLog(self.info['netid'], 'Try login')
         try:

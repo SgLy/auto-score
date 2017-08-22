@@ -32,6 +32,13 @@ class auto_score:
         while True:
             writeLog(self.info['netid'], 'Query grade')
             new_grade = self.fetcher.getScore()
+            writeLog(self.info['netid'], 'Query grade detail')
+            for grade in new_grade:
+                grade['detail'] = [{
+                    'fxcj': detail['fxcj'],
+                    'fxmc': detail['fxmc'],
+                    'mrqz': detail['mrqz']
+                } for detail in self.fetcher.getDetail(grade['resource_id'])]
             with open(self.filename, 'r') as f:
                 old_grade = json.load(f)
 
