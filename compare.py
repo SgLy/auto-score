@@ -44,7 +44,6 @@ PATTERN_ENG = '''You have %d grade updates, and GPA changed from %.2f to %.2f. B
 
 %s
 
-Please wait for our new version to also include detailed informations of your score.
 Proudly powered by SgLy
 '''
 TITLES_ENG = ['Added grade', 'Removed grade', 'Modified grade']
@@ -62,7 +61,6 @@ PATTERN_CHN = '''你的成绩有%d处变动，平均绩点由%.2f变为%.2f。�
 
 %s
 
-新版本将加入分数的详细信息，敬请期待！
 Proudly powered by SgLy
 '''
 KEYS_CHN = {
